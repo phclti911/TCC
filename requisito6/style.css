@@ -1,0 +1,50 @@
+body {
+  font-family: 'Open Sans', sans-serif;
+  background: linear-gradient(180deg, #89cff0, #fff);
+  text-align: center;
+  color: #333;
+}
+
+.container {
+  width: 60%;
+  margin: 50px auto;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 0 10px #aaa;
+  padding: 20px;
+}
+
+textarea {
+  width: 90%;
+  height: 150px;
+  font-size: 16px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  resize: none;
+}
+
+button {
+  background-color: #0078ff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+button:hover {
+  background-color: #005fcc;
+}
+
+.feedback {
+  margin-top: 20px;
+  font-size: 18px;
+}
+
+.emblema img {
+  width: 80px;
+  margin-top: 10px;
+}
