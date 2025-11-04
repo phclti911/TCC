@@ -4,7 +4,17 @@
 <meta charset="UTF-8">
 <title>Editor de Texto Acessível</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=OpenDyslexic&display=swap');
+  /* 🔧 Corrigido: não use Google Fonts para OpenDyslexic. Auto-hospede: */
+  @font-face {
+    font-family: 'OpenDyslexic';
+    src: url('fonts/OpenDyslexic-Regular.woff2') format('woff2'),
+         url('fonts/OpenDyslexic-Regular.woff') format('woff'),
+         url('fonts/OpenDyslexic-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+  }
+
   body {
     background-color: var(--fundo, #f8f9fa);
     color: var(--texto, #000);
@@ -30,6 +40,10 @@
     border: 1px solid #ccc;
     resize: vertical;
     outline: none;
+    /* Deixe um default acessível; o usuário pode trocar na UI */
+    font-family: 'OpenDyslexic', Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
   }
   button {
     background: #007bff;
@@ -49,13 +63,13 @@
 </head>
 <body>
 
-<h2>📝 Editor Acessível com TTS e Salvamento de dados </h2>
+<h2>📝 Editor Acessível com TTS e Salvamento de dados</h2>
 
 <div class="toolbar">
   <label>Fonte:
     <select id="fontSelect">
       <option value="Arial, sans-serif">Arial</option>
-      <option value="'OpenDyslexic', sans-serif">OpenDyslexic</option>
+      <option value="'OpenDyslexic', Arial, sans-serif">OpenDyslexic</option>
     </select>
   </label>
 
@@ -97,37 +111,55 @@
 <script>
 const editor = document.getElementById("editor");
 const body = document.body;
+const fontSelect = document.getElementById("fontSelect");
+const fontSize = document.getElementById("fontSize");
+const fontColor = document.getElementById("fontColor");
+const contrastMode = document.getElementById("contrastMode");
+const letterSpacing = document.getElementById("letterSpacing");
+const wordSpacing = document.getElementById("wordSpacing");
+const lineHeight = document.getElementById("lineHeight");
 
-// --- Carregar preferências ---
+/* ---------- Carregar preferências ---------- */
 async function carregarPreferencias() {
-  const res = await fetch("carregar_preferencias.php");
-  const prefs = await res.json();
-  if (prefs) {
-    editor.style.fontFamily = prefs.fonte;
-    editor.style.fontSize = prefs.tamanho + "px";
-    editor.style.color = prefs.cor;
-    editor.style.letterSpacing = prefs.espacamento_letras + "px";
-    editor.style.wordSpacing = prefs.espacamento_palavras + "px";
-    editor.style.lineHeight = prefs.espacamento_linhas;
-    if (prefs.contraste === "dark") body.classList.add("dark");
-    document.getElementById("fontSelect").value = prefs.fonte;
-    document.getElementById("fontSize").value = prefs.tamanho;
-    document.getElementById("fontColor").value = prefs.cor;
-    document.getElementById("contrastMode").value = prefs.contraste;
-    document.getElementById("letterSpacing").value = prefs.espacamento_letras;
-    document.getElementById("wordSpacing").value = prefs.espacamento_palavras;
-    document.getElementById("lineHeight").value = prefs.espacamento_linhas;
+  try {
+    const res = await fetch("carregar_preferencias.php");
+    const prefs = await res.json();
+    if (!prefs) return;
+
+    // 🔧 Corrigido: use um padrão CONSISTENTE com underscore
+    editor.style.fontFamily = prefs.fonte || "'OpenDyslexic', Arial, sans-serif";
+    editor.style.fontSize = (prefs.tamanho || 16) + "px";
+    editor.style.color = prefs.cor || "#000000";
+    editor.style.letterSpacing = (prefs.espacamento_letras ?? 0) + "px";
+    editor.style.wordSpacing = (prefs.espacamento_palavras ?? 0) + "px";
+    editor.style.lineHeight = prefs.espacamento_linhas || 1.5;
+
+    if (prefs.contraste === "dark") body.classList.add("dark"); else body.classList.remove("dark");
+
+    fontSelect.value = prefs.fonte || "'OpenDyslexic', Arial, sans-serif";
+    fontSize.value = prefs.tamanho || 16;
+    fontColor.value = prefs.cor || "#000000";
+    contrastMode.value = prefs.contraste || "normal";
+    letterSpacing.value = prefs.espacamento_letras ?? 0;
+    wordSpacing.value = prefs.espacamento_palavras ?? 0;
+    lineHeight.value = prefs.espacamento_linhas || 1.5;
+  } catch(e) {
+    console.warn("Preferências não carregadas:", e);
   }
 }
 
-// --- Carregar texto salvo ---
+/* ---------- Carregar texto salvo ---------- */
 async function carregarTexto() {
-  const res = await fetch("carregar_texto.php");
-  const dados = await res.json();
-  editor.value = dados.conteudo || "";
+  try {
+    const res = await fetch("carregar_texto.php");
+    const dados = await res.json();
+    editor.value = (dados && dados.conteudo) ? dados.conteudo : "";
+  } catch(e) {
+    console.warn("Texto não carregado:", e);
+  }
 }
 
-// --- Salvar texto ---
+/* ---------- Salvar texto ---------- */
 async function salvarTexto() {
   const texto = editor.value.trim();
   await fetch("salvar_texto.php", {
@@ -138,16 +170,17 @@ async function salvarTexto() {
   alert("Texto salvo com sucesso!");
 }
 
-// --- Aplicar e salvar preferências ---
+/* ---------- Salvar preferências ---------- */
 async function salvarPreferencias() {
   const prefs = {
-    fonte: document.getElementById("fontSelect").value,
-    tamanho: document.getElementById("fontSize").value,
-    cor: document.getElementById("fontColor").value,
-    contraste: document.getElementById("contrastMode").value,
-    espacamentoLetras: document.getElementById("letterSpacing").value,
-    espacamentoPalavras: document.getElementById("wordSpacing").value,
-    espacamentoLinhas: document.getElementById("lineHeight").value
+    fonte: fontSelect.value,
+    tamanho: Number(fontSize.value),
+    cor: fontColor.value,
+    contraste: contrastMode.value,
+    // 🔧 Corrigido: padrão com underscore
+    espacamento_letras: Number(letterSpacing.value),
+    espacamento_palavras: Number(wordSpacing.value),
+    espacamento_linhas: Number(lineHeight.value)
   };
   await fetch("salvar_preferencias.php", {
     method: "POST",
@@ -158,18 +191,24 @@ async function salvarPreferencias() {
   aplicarPreferencias();
 }
 
+/* ---------- Aplicar preferências na UI ---------- */
 function aplicarPreferencias() {
-  editor.style.fontFamily = document.getElementById("fontSelect").value;
-  editor.style.fontSize = document.getElementById("fontSize").value + "px";
-  editor.style.color = document.getElementById("fontColor").value;
-  editor.style.letterSpacing = document.getElementById("letterSpacing").value + "px";
-  editor.style.wordSpacing = document.getElementById("wordSpacing").value + "px";
-  editor.style.lineHeight = document.getElementById("lineHeight").value;
-  if (document.getElementById("contrastMode").value === "dark") body.classList.add("dark");
+  editor.style.fontFamily = fontSelect.value;
+  editor.style.fontSize = fontSize.value + "px";
+  editor.style.color = fontColor.value;
+  editor.style.letterSpacing = letterSpacing.value + "px";
+  editor.style.wordSpacing = wordSpacing.value + "px";
+  editor.style.lineHeight = lineHeight.value;
+
+  if (contrastMode.value === "dark") body.classList.add("dark");
   else body.classList.remove("dark");
 }
 
-// --- TTS com separação silábica ---
+/* Aplicação imediata ao mudar qualquer controle */
+[fontSelect, fontSize, fontColor, contrastMode, letterSpacing, wordSpacing, lineHeight]
+  .forEach(el => el.addEventListener('input', aplicarPreferencias));
+
+/* ---------- TTS com separação silábica ---------- */
 let synth = window.speechSynthesis;
 let utterance;
 
@@ -183,21 +222,19 @@ function falarTexto() {
   if (texto === "") return alert("Digite algo!");
   const palavras = texto.split(/\s+/);
   let i = 0;
-  function lerPalavra() {
+  (function lerPalavra(){
     if (i >= palavras.length) return;
-    const palavra = palavras[i];
-    const silabas = separarSilabas(palavra);
+    const silabas = separarSilabas(palavras[i]);
     utterance = new SpeechSynthesisUtterance(silabas);
     utterance.lang = "pt-BR";
     utterance.rate = 1;
     utterance.onend = () => { i++; lerPalavra(); };
     synth.speak(utterance);
-  }
-  lerPalavra();
+  })();
 }
 function pararLeitura() { if (synth.speaking) synth.cancel(); }
 
-// Carregar tudo ao iniciar
+/* ---------- Inicialização ---------- */
 window.onload = () => {
   carregarPreferencias();
   carregarTexto();
