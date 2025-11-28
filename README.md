@@ -45,4 +45,4 @@ $dbname = "editor_acessivel";
 
 Acesse no navegador:
 
-http://localhost/TCC
+http://localhost/
